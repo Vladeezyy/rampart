@@ -1,12 +1,13 @@
 // Shared by common, neoforge and fabric (after the MultiLoader template by jaredlll08)
 plugins {
     id 'java-library'
+    id 'maven-publish'
 }
 
 version = "${mod_version}+${minecraft_version}"
 
 base {
-    archivesName = project.name == 'common' ? 'ExampleMod-common' : "ExampleMod-${project.name}"
+    archivesName = project.name == 'common' ? 'Rampart-common' : "Rampart-${project.name}"
 }
 
 java {
@@ -45,8 +46,8 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 jar {
-    from(rootProject.file('LICENSE')) { rename { 'LICENSE_examplemod' } }
-    from(rootProject.file('licenses')) { into 'licenses/examplemod' }
+    from(rootProject.file('LICENSE')) { rename { 'LICENSE_rampart' } }
+    from(rootProject.file('licenses')) { into 'licenses/rampart' }
 }
 
 processResources {
@@ -69,4 +70,14 @@ processResources {
         expand expandProps
     }
     inputs.properties(expandProps)
+}
+
+// ./gradlew publishToMavenLocal: the mods that use Rampart build against dev.vladeezyy:rampart-<common|neoforge|fabric>
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = "rampart-${project.name}"
+            from components.java
+        }
+    }
 }

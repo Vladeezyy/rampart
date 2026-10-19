@@ -1,42 +1,49 @@
-# Vladeezyy mod template
+# Rampart
 
-The start of a new mod for **NeoForge and Fabric** (Minecraft 1.21.1): one common codebase, the loader layers, the
-test harness and the scripts, the way our mods are built (Raids & Renegades, Ender Wilds). License: LGPL-3.0-only.
+[![License LGPL-3.0](https://img.shields.io/badge/license-LGPL--3.0-blue)](LICENSE)
 
-## Start a mod
+Entity model and animation library for our ports of Alexthe666's mods (Rats, later Ice and Fire), for **NeoForge and
+Fabric**, Minecraft 1.21.1 (26.x on branches `mc/<version>`).
 
-1. Copy the template (GitHub: *Use this template*, or `gh repo create <name> --private --template Vladeezyy/vladeezyy-mod-template`).
-2. `python3 -I tools/rename.py <mod_id> "<Mod Name>" <repo-name>` — renames ids, package, classes, metadata and folders.
-3. In `gradle.properties`: `mod_description`, `mod_credits` (and the source / issue links if the repo name differs).
-4. Write `DESIGN.md` (what the mod adds, how it differs from what inspired it), then replace the example block.
-5. `./gradlew build`, then the tests below.
+It carries the parts of [Citadel](https://github.com/AlexModGuy/Citadel) (by Alexthe666, gegy1000 and iLexiconn,
+LGPL-3.0) that those mods use: `AdvancedEntityModel`, `AdvancedModelBox`, `BasicModelPart`, `ModelAnimator`,
+`Animation`, `AnimationHandler`, `IAnimatedEntity` (package `dev.vladeezyy.rampart`). Citadel itself has no Fabric and
+no 26.x build. Rampart has its own mod id and package, so it never clashes with Citadel in the same game.
 
-## Layout
+Differences from Citadel:
+- the animation packet goes only to the players that track the entity (Citadel sends it to every player on the server,
+  in every dimension), as a pair of VarInts;
+- model boxes render without allocating two vectors per vertex (the client check compares every vertex with Citadel's
+  math);
+- no animation start/tick events.
 
-| Path | What |
-|---|---|
-| `common/` | the mod's code and resources, vanilla Minecraft only (NeoForm + Parchment) |
-| `common/.../platform/Platform.java` | what the common code needs from the loader: registration, creative tab, spawn eggs, block entity types, packets, config dir |
-| `neoforge/`, `fabric/` | entry points, the `Platform` implementations, loader metadata |
-| `common/src/selftest/` | tests shared by both loaders (dev runs only, never in the jar) |
-| `tools/gen_assets.py` | textures drawn by code (`python3 tools/gen_assets.py`, needs Pillow) |
-| `tools/gen_lang.py` | the language files from one table, six languages (en_us, ru_ru, uk_ua, de_de, es_es, pt_br) |
+## Use
 
-## Tests (long runs: start them in the background)
+```groovy
+repositories { mavenLocal() } // ./gradlew publishToMavenLocal in this repo
+dependencies {
+    implementation "dev.vladeezyy.rampart:rampart-neoforge:1.0.0+1.21.1"      // NeoForge
+    modImplementation "dev.vladeezyy.rampart:rampart-fabric:1.0.0+1.21.1"     // Fabric
+    compileOnly "dev.vladeezyy.rampart:rampart-common:1.0.0+1.21.1"           // common code
+}
+```
 
-| Script | What it does |
-|---|---|
-| `tools/selftest.sh` (`LOADER=fabric`) | dev server on a fresh world, `SelfTest` checks, `PASS n/n` |
-| `tools/scenetest.sh` (`-Pscene_lang=ru_ru`, `LOADER=fabric`) | client scene: screenshots in `<loader>/run/screenshots/scene_*.png`, missing textures, translations |
-| `tools/nettest.sh` (`LOADER=fabric`) | a dev client joins a dev dedicated server and plays (`NetScene`) |
-| `prodtest/serve.sh` | the release jar on a real NeoForge server (put the server in `prodtest/<version>/`) |
-| `prodtest/serve-fabric.sh` | the Fabric release jar on a production Fabric server with Fabric API |
+## Tests
 
-`-Pwith_compat` adds Sodium, Iris, Lithium, FerriteCore, ModernFix and Jade to the NeoForge dev runs;
-`-Pneo_version=21.1.197` checks the oldest supported NeoForge.
+`tools/selftest.sh` (server: animation lifecycle, packet codec, `LOADER=fabric` for Fabric) and `tools/scenetest.sh`
+(client: renders a model into a recording buffer and compares with Citadel's math).
 
-## Conventions
+## License
 
-Reports in Russian, commits as Vladeezyy with no AI attribution, README in English with Russian in `<details>`,
-release notes in English, six languages, LGPL-3.0-only (GPL originals stay GPL). The full rules are in
-[modding-kb](https://github.com/Vladeezyy/modding-kb).
+LGPL-3.0-only. Copyright (c) 2026 Vladeezyy; the model and animation code comes from Citadel (LGPL-3.0). Forks are
+welcome under the same license with credit; please download Rampart only from its official pages.
+
+<details>
+<summary>По-русски</summary>
+
+Библиотека моделей и анимаций для наших портов модов Alexthe666 (Rats, позже Ice and Fire) на NeoForge и Fabric.
+Внутри — нужная этим модам часть Citadel (LGPL-3.0): у самой Citadel нет версий для Fabric и 26.x. Свой mod id и
+пакет, поэтому с Citadel в одной сборке не конфликтует. Отличия: пакет анимации уходит только игрокам рядом с
+существом, коробки моделей рисуются без выделения памяти на каждую вершину.
+
+</details>
