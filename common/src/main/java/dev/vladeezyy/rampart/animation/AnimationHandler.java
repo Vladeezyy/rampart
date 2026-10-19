@@ -16,7 +16,7 @@ public enum AnimationHandler {
 
     /** Starts {@code animation} on the server and sends it to the players that see the entity */
     public <T extends Entity & IAnimatedEntity> void sendAnimationMessage(T entity, Animation animation) {
-        if (entity.level().isClientSide) {
+        if (entity.level().isClientSide()) {
             return;
         }
         entity.setAnimation(animation);

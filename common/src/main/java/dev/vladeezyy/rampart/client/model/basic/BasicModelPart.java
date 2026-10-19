@@ -5,11 +5,18 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
+import dev.vladeezyy.rampart.client.model.VanillaParts;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /*
  * @since 1.9.0
@@ -31,6 +38,7 @@ public class BasicModelPart {
     public boolean showModel = true;
     private final ObjectList<BasicModelPart.ModelBox> cubeList = new ObjectArrayList<>();
     private final ObjectList<BasicModelPart> childModels = new ObjectArrayList<>();
+    private ModelPart vanillaPart;
 
     public BasicModelPart(BasicEntityModel model) {
         this.setTextureSize(model.textureWidth, model.textureHeight);
@@ -176,12 +184,57 @@ public class BasicModelPart {
         return this;
     }
 
+    /**
+     * The vanilla part this box draws with on 26.x, built on first use from the boxes and children added so far.
+     * Call {@link #invalidateVanillaPart()} (or the model's {@code rebuildVanillaParts()}) after adding boxes later.
+     */
+    public ModelPart vanillaPart() {
+        if (this.vanillaPart == null) {
+            this.vanillaPart = this.buildVanillaPart();
+        }
+        return this.vanillaPart;
+    }
+
+    protected ModelPart buildVanillaPart() {
+        List<ModelPart.Cube> cubes = new ArrayList<>(this.cubeList.size());
+        for (BasicModelPart.ModelBox box : this.cubeList) {
+            cubes.add(box.toVanilla());
+        }
+        Map<String, ModelPart> children = new LinkedHashMap<>();
+        for (BasicModelPart child : this.childModels) {
+            children.put("child" + children.size(), child.vanillaPart());
+        }
+        return new ModelPart(cubes, children);
+    }
+
+    /** Forgets the vanilla part of this box and its children; the next render builds them again */
+    public void invalidateVanillaPart() {
+        this.vanillaPart = null;
+        for (BasicModelPart child : this.childModels) {
+            child.invalidateVanillaPart();
+        }
+    }
+
+    /** Copies the current pose of this box and its children into their vanilla parts */
+    public void syncVanillaPose() {
+        VanillaParts.pose(this.vanillaPart(), this.rotationPointX, this.rotationPointY, this.rotationPointZ,
+            this.rotateAngleX, this.rotateAngleY, this.rotateAngleZ, this.showModel);
+        for (BasicModelPart child : this.childModels) {
+            child.syncVanillaPose();
+        }
+    }
+
     public BasicModelPart.ModelBox getRandomCube(RandomSource randomIn) {
         return !this.cubeList.isEmpty() ? this.cubeList.get(randomIn.nextInt(this.cubeList.size())) : null;
     }
 
     public static class ModelBox {
         private final BasicModelPart.TexturedQuad[] quads;
+        /** This box as a vanilla cube drawing the same quads */
+        public net.minecraft.client.model.geom.ModelPart.Cube toVanilla() {
+            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.posX1, this.posY1, this.posZ1, this.posX2, this.posY2, this.posZ2, this.quads);
+        }
+
         public final float posX1;
         public final float posY1;
         public final float posZ1;
@@ -258,7 +311,13 @@ public class BasicModelPart {
         }
     }
 
-    static class TexturedQuad {
+    static class TexturedQuad implements dev.vladeezyy.rampart.client.model.VanillaParts.Face {
+        @Override public int vertexCount() { return this.vertexPositions.length; }
+        @Override public Vector3f position(int vertex) { return this.vertexPositions[vertex].position; }
+        @Override public float u(int vertex) { return this.vertexPositions[vertex].textureU; }
+        @Override public float v(int vertex) { return this.vertexPositions[vertex].textureV; }
+        @Override public Vector3f normal() { return this.normal; }
+
         public final BasicModelPart.PositionTextureVertex[] vertexPositions;
         public final Vector3f normal;
 

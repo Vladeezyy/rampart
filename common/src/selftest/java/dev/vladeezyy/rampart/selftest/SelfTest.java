@@ -12,7 +12,7 @@ import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Pig;
+import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ public final class SelfTest {
   private static final List<String> failures = new ArrayList<>();
   private static int checks;
   private static int tick = -1;
+  private static int spawnedAt = -1;
   private static AnimatedPig pig;
 
   /** A pig that plays Citadel-style animations, like the mobs of the mods that use Rampart */
@@ -78,7 +79,7 @@ public final class SelfTest {
       return;
     }
     ServerLevel level = server.overworld();
-    BlockPos spawn = level.getSharedSpawnPos();
+    BlockPos spawn = level.getRespawnData().pos();
     level.setChunkForced(spawn.getX() >> 4, spawn.getZ() >> 4, true);
     check("platform of this loader is loaded", () -> Platform.INSTANCE.name().equals(System.getProperty("rampart.loader", Platform.INSTANCE.name())));
     check("animation packet survives encode / decode", () -> {
@@ -92,9 +93,16 @@ public final class SelfTest {
       AnimationMessage.CODEC.encode(buf, new AnimationMessage(7, -1));
       return AnimationMessage.CODEC.decode(buf).index() == -1;
     });
+    tick = 0;
+  }
+
+  private static void spawnAnimatedPig(MinecraftServer server) {
+    ServerLevel level = server.overworld();
+    BlockPos spawn = level.getRespawnData().pos();
     pig = new AnimatedPig(level);
-    pig.moveTo(spawn.getX() + 0.5, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, spawn.getX(), spawn.getZ()), spawn.getZ() + 0.5);
+    pig.snapTo(spawn.getX() + 0.5, level.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING, spawn.getX(), spawn.getZ()), spawn.getZ() + 0.5);
     level.addFreshEntity(pig);
+    check("the entity is in the level", () -> level.getEntity(pig.getId()) == pig);
     check("an animation starts on the server", () -> {
       AnimationHandler.INSTANCE.sendAnimationMessage(pig, AnimatedPig.ROAR);
       return pig.getAnimation() == AnimatedPig.ROAR && pig.getAnimationTick() == 0;
@@ -109,7 +117,6 @@ public final class SelfTest {
       AnimationHandler.INSTANCE.sendAnimationMessage(pig, AnimatedPig.ROAR);
       return bite && none && other.getAnimation() == IAnimatedEntity.NO_ANIMATION;
     });
-    tick = 0;
   }
 
   /** After every server tick (wired by the loader's test hooks) */
@@ -118,13 +125,22 @@ public final class SelfTest {
       return;
     }
     tick++;
-    if (tick == 6) {
+    // 26.x loads the forced spawn chunk over several ticks: spawn once entities tick there, check relative to that
+    if (spawnedAt < 0) {
+      ServerLevel level = server.overworld();
+      if (level.isPositionEntityTicking(level.getRespawnData().pos()) || tick > 400) {
+        spawnAnimatedPig(server);
+        spawnedAt = tick;
+      }
+      return;
+    }
+    if (tick == spawnedAt + 6) {
       check("the animation ticks with the entity", () -> pig.getAnimation() == AnimatedPig.ROAR && pig.getAnimationTick() > 0);
     }
-    if (tick == 20) {
+    if (tick == spawnedAt + 20) {
       check("the animation ends after its duration", () -> pig.getAnimation() == IAnimatedEntity.NO_ANIMATION && pig.getAnimationTick() == 0);
     }
-    if (tick == 25) {
+    if (tick == spawnedAt + 25) {
       int passed = checks - failures.size();
       if (failures.isEmpty()) {
         Rampart.LOG.info(PREFIX + "PASS {}/{}", passed, checks);

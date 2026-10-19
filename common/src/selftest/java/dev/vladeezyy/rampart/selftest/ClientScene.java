@@ -37,7 +37,7 @@ public final class ClientScene {
 
   /** A two-part model like the mobs' models: a body with a rotated, scaled head as its child */
   static final class TestModel extends AdvancedEntityModel<Entity> {
-    final AdvancedModelBox body, head;
+    final AdvancedModelBox body, head, jaw;
 
     TestModel() {
       this.texWidth = 64;
@@ -51,12 +51,17 @@ public final class ClientScene {
       this.head.setRotationPoint(0, -1, -6);
       this.head.addBox(-3, -3, -5, 6, 6, 5, 0);
       this.body.addChild(this.head);
+      this.jaw = new AdvancedModelBox(this, "jaw");
+      this.jaw.setTextureOffset(0, 20);
+      this.jaw.setRotationPoint(0, 2, -4);
+      this.jaw.addBox(-2, 0, -3, 4, 2, 3, 0, true);
+      this.head.addChild(this.jaw);
       this.updateDefaultPose();
     }
 
     @Override
     public Iterable<AdvancedModelBox> getAllParts() {
-      return List.of(this.body, this.head);
+      return List.of(this.body, this.head, this.jaw);
     }
 
     @Override
@@ -84,6 +89,43 @@ public final class ClientScene {
     @Override public VertexConsumer setUv1(int u, int v) { return this; }
     @Override public VertexConsumer setUv2(int u, int v) { return this; }
     @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
+    @Override public VertexConsumer setColor(int color) { return this; }
+    @Override public VertexConsumer setLineWidth(float width) { return this; }
+  }
+
+  /** The vertices of Citadel's own immediate rendering of the model (the box's render(), as on 1.21.1) */
+  private static List<float[]> citadel(TestModel model, PoseStack pose) {
+    Recorder recorder = new Recorder();
+    model.body.render(pose, recorder, 0xF000F0, 0, -1);
+    return recorder.vertices;
+  }
+
+  /** The vertices of the 26.x path: the pose copied into vanilla parts, drawn by the final Model.renderToBuffer */
+  private static List<float[]> vanilla(TestModel model, PoseStack pose) {
+    Recorder recorder = new Recorder();
+    model.syncPose();
+    model.renderToBuffer(pose, recorder, 0xF000F0, 0, -1);
+    return recorder.vertices;
+  }
+
+  private static float difference(List<float[]> a, List<float[]> b) {
+    if (a.size() != b.size()) {
+      return Float.POSITIVE_INFINITY;
+    }
+    float worst = 0;
+    for (int i = 0; i < a.size(); i++) {
+      for (int k = 0; k < 8; k++) {
+        worst = Math.max(worst, Math.abs(a.get(i)[k] - b.get(i)[k]));
+      }
+    }
+    return worst;
+  }
+
+  private static PoseStack pose() {
+    PoseStack pose = new PoseStack();
+    pose.translate(1.5, -0.25, 3);
+    pose.mulPose(new org.joml.Quaternionf().rotateXYZ(0.3F, -1.1F, 0.05F));
+    return pose;
   }
 
   private static void run(Minecraft mc) {
@@ -92,17 +134,12 @@ public final class ClientScene {
     model.head.rotateAngleX = -0.4F;
     model.head.rotateAngleZ = 0.2F;
     model.head.setScale(1.2F, 0.9F, 1.1F);
-    PoseStack pose = new PoseStack();
-    pose.translate(1.5, -0.25, 3);
-    pose.mulPose(new org.joml.Quaternionf().rotateXYZ(0.3F, -1.1F, 0.05F));
-    Recorder recorder = new Recorder();
-    model.renderToBuffer(pose, recorder, 0xF000F0, 0, -1);
-    check("both boxes drawn (2 boxes x 6 faces x 4 vertices)", recorder.vertices.size() == 48, recorder.vertices.size());
+    model.jaw.rotateAngleX = 0.5F;
+    List<float[]> drawn = vanilla(model, pose());
+    check("all boxes drawn (3 boxes x 6 faces x 4 vertices)", drawn.size() == 72, drawn.size());
 
     // the body's 24 vertices again with Citadel's math: new Vector4f(pos / 16, 1).mul(pose) and a new normal per quad
-    PoseStack again = new PoseStack();
-    again.translate(1.5, -0.25, 3);
-    again.mulPose(new org.joml.Quaternionf().rotateXYZ(0.3F, -1.1F, 0.05F));
+    PoseStack again = pose();
     model.body.translateAndRotate(again);
     Matrix4f matrix = again.last().pose();
     org.joml.Matrix3f normalMatrix = again.last().normal();
@@ -113,7 +150,7 @@ public final class ClientScene {
         Vector3f normal = new Vector3f(quad.normal).mul(normalMatrix).normalize();
         for (TabulaModelRenderUtils.PositionTextureVertex vertex : quad.vertexPositions) {
           Vector4f expected = new Vector4f(vertex.position.x() / 16F, vertex.position.y() / 16F, vertex.position.z() / 16F, 1).mul(matrix);
-          float[] got = recorder.vertices.get(i++);
+          float[] got = drawn.get(i++);
           worst = Math.max(worst, Math.abs(expected.x - got[0]) + Math.abs(expected.y - got[1]) + Math.abs(expected.z - got[2])
             + Math.abs(normal.x - got[5]) + Math.abs(normal.y - got[6]) + Math.abs(normal.z - got[7])
             + Math.abs(vertex.textureU - got[3]) + Math.abs(vertex.textureV - got[4]));
@@ -121,19 +158,46 @@ public final class ClientScene {
       }
     }
     check("body vertices match Citadel's math (positions, normals, UV)", i == 24 && worst < 1e-5F, "worst difference " + worst);
-    boolean finite = recorder.vertices.stream().allMatch(v -> Float.isFinite(v[0]) && Float.isFinite(v[1]) && Float.isFinite(v[2]));
+    float d = difference(drawn, citadel(model, pose()));
+    check("scaled head, unscaled children: vanilla parts = Citadel's render", d < 1e-5F, d);
+    model.head.setShouldScaleChildren(true);
+    d = difference(vanilla(model, pose()), citadel(model, pose()));
+    check("scaled head with scaled children = Citadel's render", d < 1e-5F, d);
+    model.head.setShouldScaleChildren(false);
+    model.head.setScale(0.00005F, 1, 1);
+    d = difference(vanilla(model, pose()), citadel(model, pose()));
+    check("near-zero scale (Citadel's 0.0001 floor) = Citadel's render", d < 1e-5F, d);
+    model.head.setScale(1, 1, 1);
+    model.jaw.showModel = false;
+    int hidden = vanilla(model, pose()).size();
+    model.jaw.showModel = true;
+    check("hidden box not drawn, shown again after", hidden == 48 && vanilla(model, pose()).size() == 72, hidden);
+    model.resetToDefaultPose();
+    d = difference(vanilla(model, pose()), citadel(model, pose()));
+    check("pose changes reach the vanilla parts (reset to default)", d < 1e-5F, d);
+    boolean finite = drawn.stream().allMatch(v -> Float.isFinite(v[0]) && Float.isFinite(v[1]) && Float.isFinite(v[2]));
     check("all vertices finite", finite, "");
-    float[] last = recorder.vertices.get(47);
+    float[] last = drawn.get(47);
     float length = (float) Math.sqrt(last[5] * last[5] + last[6] * last[6] + last[7] * last[7]);
     check("head normals are unit length", Math.abs(length - 1) < 1e-4F, length);
 
-    // the speed: 5000 renders of the model
+    // the speed: 5000 renders of the model, vanilla path (pose sync + draw) and Citadel's immediate path
+    PoseStack pose = pose();
+    Recorder recorder = new Recorder();
     long start = System.nanoTime();
     for (int n = 0; n < 5000; n++) {
       recorder.vertices.clear();
+      model.syncPose();
       model.renderToBuffer(pose, recorder, 0xF000F0, 0, -1);
     }
-    Rampart.LOG.info("[scene] PERF 5000 renders of a 2-box model: " + (System.nanoTime() - start) / 1_000_000 + " ms");
+    long vanillaMs = (System.nanoTime() - start) / 1_000_000;
+    start = System.nanoTime();
+    for (int n = 0; n < 5000; n++) {
+      recorder.vertices.clear();
+      model.body.render(pose, recorder, 0xF000F0, 0, -1);
+    }
+    Rampart.LOG.info("[scene] PERF 5000 renders of a 3-box model: vanilla parts " + vanillaMs + " ms, Citadel's render "
+      + (System.nanoTime() - start) / 1_000_000 + " ms");
   }
 
   public static void onClientTick() {

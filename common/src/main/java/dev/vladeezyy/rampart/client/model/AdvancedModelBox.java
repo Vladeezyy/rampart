@@ -7,10 +7,16 @@ import com.mojang.math.Axis;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectListIterator;
+import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.util.Mth;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * An enhanced RendererModel
@@ -37,6 +43,7 @@ public class AdvancedModelBox extends BasicModelPart {
     public float offsetY;
     public float offsetZ;
     public String boxName = "";
+    private ModelPart vanillaCubes;
 
     public AdvancedModelBox(AdvancedEntityModel model, String name) {
         super(model);
@@ -280,6 +287,58 @@ public class AdvancedModelBox extends BasicModelPart {
                     buffer.addVertex(scratch.x, scratch.y, scratch.z, color, vertex.textureU, vertex.textureV, packedOverlay, packedLight, nx, ny, nz);
                 }
             }
+        }
+    }
+
+    /**
+     * Citadel scales the box's cubes and, unless {@link #scaleChildren}, undoes the scale for the children. As vanilla
+     * parts: a pivot part (position and rotation) holding one part with the cubes and the children's pivots; the scale
+     * goes on the pivot (children scaled too) or on the cube part (children not scaled).
+     */
+    @Override
+    protected ModelPart buildVanillaPart() {
+        List<ModelPart.Cube> cubes = new ArrayList<>(this.cubeList.size());
+        for (TabulaModelRenderUtils.ModelBox box : this.cubeList) {
+            cubes.add(box.toVanilla());
+        }
+        Map<String, ModelPart> children = new LinkedHashMap<>();
+        this.vanillaCubes = new ModelPart(cubes, new LinkedHashMap<>());
+        children.put("cubes", this.vanillaCubes);
+        for (BasicModelPart child : this.childModels) {
+            children.put("child" + children.size(), child.vanillaPart());
+        }
+        return new ModelPart(new ArrayList<>(), children);
+    }
+
+    @Override
+    public void invalidateVanillaPart() {
+        super.invalidateVanillaPart();
+        for (BasicModelPart child : this.childModels) {
+            child.invalidateVanillaPart();
+        }
+    }
+
+    @Override
+    public void syncVanillaPose() {
+        ModelPart pivot = this.vanillaPart();
+        VanillaParts.pose(pivot, this.rotationPointX, this.rotationPointY, this.rotationPointZ,
+            this.rotateAngleX, this.rotateAngleY, this.rotateAngleZ, this.showModel);
+        if (this.scaleChildren) {
+            pivot.xScale = this.scaleX;
+            pivot.yScale = this.scaleY;
+            pivot.zScale = this.scaleZ;
+            this.vanillaCubes.xScale = this.vanillaCubes.yScale = this.vanillaCubes.zScale = 1.0F;
+        } else {
+            // Citadel: scale(s), cubes, scale(1 / max(s, 0.0001)), children - the children keep s / max(s, 0.0001)
+            pivot.xScale = this.scaleX / Math.max(this.scaleX, 0.0001F);
+            pivot.yScale = this.scaleY / Math.max(this.scaleY, 0.0001F);
+            pivot.zScale = this.scaleZ / Math.max(this.scaleZ, 0.0001F);
+            this.vanillaCubes.xScale = pivot.xScale == 0 ? 0 : this.scaleX / pivot.xScale;
+            this.vanillaCubes.yScale = pivot.yScale == 0 ? 0 : this.scaleY / pivot.yScale;
+            this.vanillaCubes.zScale = pivot.zScale == 0 ? 0 : this.scaleZ / pivot.zScale;
+        }
+        for (BasicModelPart child : this.childModels) {
+            child.syncVanillaPose();
         }
     }
 

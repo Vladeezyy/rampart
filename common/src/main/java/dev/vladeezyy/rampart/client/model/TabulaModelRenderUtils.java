@@ -25,7 +25,13 @@ public class TabulaModelRenderUtils {
         }
     }
 
-    public static class TexturedQuad {
+    public static class TexturedQuad implements VanillaParts.Face {
+        @Override public int vertexCount() { return this.vertexPositions.length; }
+        @Override public Vector3f position(int vertex) { return this.vertexPositions[vertex].position; }
+        @Override public float u(int vertex) { return this.vertexPositions[vertex].textureU; }
+        @Override public float v(int vertex) { return this.vertexPositions[vertex].textureV; }
+        @Override public Vector3f normal() { return this.normal; }
+
         public final TabulaModelRenderUtils.PositionTextureVertex[] vertexPositions;
         public final Vector3f normal;
 
@@ -57,6 +63,11 @@ public class TabulaModelRenderUtils {
 
     public static class ModelBox {
         public final TabulaModelRenderUtils.TexturedQuad[] quads;
+        /** This box as a vanilla cube drawing the same quads */
+        public net.minecraft.client.model.geom.ModelPart.Cube toVanilla() {
+            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.posX1, this.posY1, this.posZ1, this.posX2, this.posY2, this.posZ2, this.quads);
+        }
+
         public final float posX1;
         public final float posY1;
         public final float posZ1;
