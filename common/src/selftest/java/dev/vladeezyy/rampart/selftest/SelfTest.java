@@ -11,7 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.animal.pig.Pig;
 import net.minecraft.world.level.Level;
 
@@ -40,7 +40,7 @@ public final class SelfTest {
     private int animationTick;
 
     AnimatedPig(Level level) {
-      super(EntityType.PIG, level);
+      super(EntityTypes.PIG, level);
     }
 
     @Override

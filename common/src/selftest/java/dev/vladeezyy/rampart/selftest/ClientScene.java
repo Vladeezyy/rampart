@@ -206,7 +206,7 @@ public final class ClientScene {
     }
     Minecraft mc = Minecraft.getInstance();
     // any first screen (title or the accessibility onboarding of a fresh game directory) once the game has loaded
-    if (mc.screen != null && ++ticks > 40) {
+    if (mc.gui.screen() != null && ++ticks > 40) {
       done = true;
       try {
         run(mc);
