@@ -158,7 +158,8 @@ public class ModelAnimator {
                     box.rotationPointZ += transform.getOffsetZ();
                 }
             } else {
-                float frameTime = Minecraft.getInstance().getTimer().getGameTimeDeltaTicks();
+                // the partial tick, as Citadel's 1.20 getFrameTime(); Citadel 1.21 took the frame delta (getGameTimeDeltaTicks), which jitters
+                float frameTime = Minecraft.getInstance().getTimer().getGameTimeDeltaPartialTick(false);
                 float tick = (animationTick - this.prevTempTick + frameTime) / (this.tempTick - this.prevTempTick);
                 float inc = Mth.sin((float) (tick * Math.PI / 2.0F)), dec = 1.0F - inc;
                 for (AdvancedModelBox box : this.prevTransformMap.keySet()) {
