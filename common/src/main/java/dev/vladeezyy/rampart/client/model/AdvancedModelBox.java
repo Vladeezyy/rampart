@@ -238,15 +238,15 @@ public class AdvancedModelBox extends BasicModelPart {
     public void translateAndRotate(PoseStack matrixStackIn) {
         matrixStackIn.translate(this.rotationPointX / 16.0F, this.rotationPointY / 16.0F, (double)(this.rotationPointZ / 16.0F));
         if (this.rotateAngleZ != 0.0F) {
-            matrixStackIn.mulPose(Axis.ZP.rotation(this.rotateAngleZ));
+            matrixStackIn.rotate(Axis.ZP, this.rotateAngleZ);
         }
 
         if (this.rotateAngleY != 0.0F) {
-            matrixStackIn.mulPose(Axis.YP.rotation(this.rotateAngleY));
+            matrixStackIn.rotate(Axis.YP, this.rotateAngleY);
         }
 
         if (this.rotateAngleX != 0.0F) {
-            matrixStackIn.mulPose(Axis.XP.rotation(this.rotateAngleX));
+            matrixStackIn.rotate(Axis.XP, this.rotateAngleX);
         }
 
         matrixStackIn.scale(this.scaleX, this.scaleY, this.scaleZ);

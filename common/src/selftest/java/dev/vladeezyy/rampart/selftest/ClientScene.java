@@ -91,6 +91,7 @@ public final class ClientScene {
     @Override public VertexConsumer setNormal(float x, float y, float z) { return this; }
     @Override public VertexConsumer setColor(int color) { return this; }
     @Override public VertexConsumer setLineWidth(float width) { return this; }
+    @Override public VertexConsumer setUv3(float u, float v) { return this; }
   }
 
   /** The vertices of Citadel's own immediate rendering of the model (the box's render(), as on 1.21.1) */
@@ -124,7 +125,7 @@ public final class ClientScene {
   private static PoseStack pose() {
     PoseStack pose = new PoseStack();
     pose.translate(1.5, -0.25, 3);
-    pose.mulPose(new org.joml.Quaternionf().rotateXYZ(0.3F, -1.1F, 0.05F));
+    pose.rotate(new org.joml.Quaternionf().rotateXYZ(0.3F, -1.1F, 0.05F));
     return pose;
   }
 
