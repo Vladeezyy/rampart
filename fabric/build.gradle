@@ -30,6 +30,7 @@ dependencies {
 }
 
 loom {
+    accessWidenerPath = file('src/main/resources/rampart.accesswidener')
     mods {
         "${mod_id}" {
             sourceSet sourceSets.main

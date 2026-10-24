@@ -1,0 +1,16 @@
+accessWidener v2 named
+# common/accesstransformer.cfg (what NeoForge opens)
+accessible class net/minecraft/client/renderer/block/model/ItemTransform$Deserializer
+accessible method net/minecraft/client/renderer/block/model/ItemTransform$Deserializer <init> ()V
+accessible class net/minecraft/client/renderer/block/model/ItemTransforms$Deserializer
+accessible method net/minecraft/client/renderer/block/model/ItemTransforms$Deserializer <init> ()V
+accessible class net/minecraft/client/renderer/block/model/BlockElement$Deserializer
+accessible method net/minecraft/client/renderer/block/model/BlockElement$Deserializer <init> ()V
+accessible class net/minecraft/client/renderer/block/model/BlockElementFace$Deserializer
+accessible method net/minecraft/client/renderer/block/model/BlockElementFace$Deserializer <init> ()V
+accessible class net/minecraft/client/renderer/block/model/BlockFaceUV$Deserializer
+accessible method net/minecraft/client/renderer/block/model/BlockFaceUV$Deserializer <init> ()V
+accessible class net/minecraft/client/renderer/block/model/ItemOverride$Deserializer
+accessible method net/minecraft/client/renderer/block/model/ItemOverride$Deserializer <init> ()V
+# Citadel: Entity.collide() public so ICustomCollisions entities can override it
+accessible method net/minecraft/world/entity/Entity collide (Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;

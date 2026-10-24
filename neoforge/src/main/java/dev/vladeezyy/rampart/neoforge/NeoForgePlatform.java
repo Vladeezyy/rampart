@@ -1,5 +1,6 @@
 package dev.vladeezyy.rampart.neoforge;
 
+import net.neoforged.fml.loading.FMLPaths;
 import dev.vladeezyy.rampart.platform.Platform;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.world.entity.Entity;
@@ -14,5 +15,10 @@ public final class NeoForgePlatform implements Platform {
     @Override
     public void sendToTracking(Entity entity, CustomPacketPayload payload) {
         PacketDistributor.sendToPlayersTrackingEntityAndSelf(entity, payload);
+    }
+
+    @Override
+    public java.nio.file.Path configDir() {
+        return FMLPaths.CONFIGDIR.get();
     }
 }

@@ -1,5 +1,6 @@
 package dev.vladeezyy.rampart.fabric;
 
+import net.fabricmc.loader.api.FabricLoader;
 import dev.vladeezyy.rampart.platform.Platform;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -21,5 +22,10 @@ public final class FabricPlatform implements Platform {
         if (entity instanceof ServerPlayer self) {
             ServerPlayNetworking.send(self, payload);
         }
+    }
+
+    @Override
+    public java.nio.file.Path configDir() {
+        return FabricLoader.getInstance().getConfigDir();
     }
 }
