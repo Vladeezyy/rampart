@@ -10,6 +10,7 @@
     "issues": "${mod_issues}"
   },
   "license": "${license}",
+  "icon": "rampart_logo.png",
   "environment": "*",
   "entrypoints": {
     "main": ["dev.vladeezyy.rampart.fabric.RampartFabric"],

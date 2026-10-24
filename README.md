@@ -10,7 +10,21 @@ LGPL-3.0) that those mods use: `AdvancedEntityModel`, `AdvancedModelBox`, `Basic
 `Animation`, `AnimationHandler`, `IAnimatedEntity` (package `dev.vladeezyy.rampart`). Citadel itself has no Fabric and
 no 26.x build. Rampart has its own mod id and package, so it never clashes with Citadel in the same game.
 
-Differences from Citadel:
+## Download
+
+Players only need Rampart when a mod asks for it (for example our Rats port). Take the jar for your Minecraft version
+and loader from the [releases](https://github.com/Vladeezyy/rampart/releases) and put it into `mods`, on the server and
+on every client; Fabric also needs [Fabric API](https://modrinth.com/mod/fabric-api).
+
+- **26.3**: NeoForge 26.3.0.94+, Fabric Loader 0.19.5+, Java 25
+- **26.2**: NeoForge 26.2.0.93+, Fabric Loader 0.19.5+, Java 25
+- **26.1.2**: NeoForge 26.1.2+, Fabric Loader 0.19.5+, Java 25
+- **1.21.1**: NeoForge 21.1.197+, Fabric Loader 0.16.14+, Java 21
+
+The source of each version is on its branch: `main` (1.21.1), `mc/26.1.2`, `mc/26.2`, `mc/26.3`.
+
+## Differences from Citadel
+
 - the animation packet goes only to the players that track the entity (Citadel sends it to every player on the server,
   in every dimension), as a pair of VarInts;
 - model boxes render without allocating two vectors per vertex (the client check compares every vertex with Citadel's
@@ -45,5 +59,8 @@ welcome under the same license with credit; please download Rampart only from it
 Внутри — нужная этим модам часть Citadel (LGPL-3.0): у самой Citadel нет версий для Fabric и 26.x. Свой mod id и
 пакет, поэтому с Citadel в одной сборке не конфликтует. Отличия: пакет анимации уходит только игрокам рядом с
 существом, коробки моделей рисуются без выделения памяти на каждую вершину.
+
+Скачать: [релизы](https://github.com/Vladeezyy/rampart/releases), jar для своей версии Minecraft и загрузчика в папку
+`mods` (на сервере и у каждого игрока); на Fabric ещё нужен Fabric API. Java 21 для 1.21.1, Java 25 для 26.x.
 
 </details>
