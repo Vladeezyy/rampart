@@ -13,6 +13,9 @@ import java.util.EnumSet;
  * every Rampart box keeps a mirror {@code ModelPart} and copies its pose into it before drawing. The cube's polygons are
  * replaced with Citadel's own quads, so positions, UV and normals are exactly Citadel's, whatever vanilla's cube code
  * does differently.
+ *
+ * <p>The cube is still built with the box's real parameters (texture offset and size, inflation, mirror): mods that
+ * render cubes from those parameters instead of the polygons (Sodium's entity renderer) must get the same box.
  */
 public final class VanillaParts {
     private static final EnumSet<Direction> ALL_FACES = EnumSet.allOf(Direction.class);
@@ -32,9 +35,10 @@ public final class VanillaParts {
         Vector3f normal();
     }
 
-    /** A vanilla cube with the bounds {@code (x1, y1, z1)–(x2, y2, z2)} drawing exactly {@code faces} */
-    public static ModelPart.Cube cube(float x1, float y1, float z1, float x2, float y2, float z2, Face[] faces) {
-        ModelPart.Cube cube = new ModelPart.Cube(0, 0, x1, y1, z1, x2 - x1, y2 - y1, z2 - z1, 0, 0, 0, false, 1, 1, ALL_FACES);
+    /** A vanilla cube with the parameters of a Citadel box, drawing exactly {@code faces} */
+    public static ModelPart.Cube cube(int texOffX, int texOffY, float x, float y, float z, float width, float height, float depth,
+                                      float deltaX, float deltaY, float deltaZ, boolean mirror, float texWidth, float texHeight, Face[] faces) {
+        ModelPart.Cube cube = new ModelPart.Cube(texOffX, texOffY, x, y, z, width, height, depth, deltaX, deltaY, deltaZ, mirror, texWidth, texHeight, ALL_FACES);
         if (cube.polygons.length != faces.length) {
             throw new IllegalStateException("vanilla cube has " + cube.polygons.length + " faces, Citadel's box " + faces.length);
         }

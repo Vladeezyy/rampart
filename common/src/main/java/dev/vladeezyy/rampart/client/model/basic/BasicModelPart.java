@@ -232,7 +232,8 @@ public class BasicModelPart {
         private final BasicModelPart.TexturedQuad[] quads;
         /** This box as a vanilla cube drawing the same quads */
         public net.minecraft.client.model.geom.ModelPart.Cube toVanilla() {
-            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.posX1, this.posY1, this.posZ1, this.posX2, this.posY2, this.posZ2, this.quads);
+            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.texOffX, this.texOffY, this.posX1, this.posY1, this.posZ1, this.posX2 - this.posX1, this.posY2 - this.posY1, this.posZ2 - this.posZ1,
+                this.deltaX, this.deltaY, this.deltaZ, this.mirror, this.texWidth, this.texHeight, this.quads);
         }
 
         public final float posX1;
@@ -241,9 +242,26 @@ public class BasicModelPart {
         public final float posX2;
         public final float posY2;
         public final float posZ2;
+        /** The box's parameters, for {@link #toVanilla()} */
+        private final int texOffX;
+        private final int texOffY;
+        private final float deltaX;
+        private final float deltaY;
+        private final float deltaZ;
+        private final boolean mirror;
+        private final float texWidth;
+        private final float texHeight;
 
         public ModelBox(int texOffX, int texOffY, float x, float y, float z, float width, float height, float depth, float deltaX, float deltaY, float deltaZ, boolean mirorIn, float texWidth, float texHeight) {
             this.posX1 = x;
+            this.texOffX = texOffX;
+            this.texOffY = texOffY;
+            this.deltaX = deltaX;
+            this.deltaY = deltaY;
+            this.deltaZ = deltaZ;
+            this.mirror = mirorIn;
+            this.texWidth = texWidth;
+            this.texHeight = texHeight;
             this.posY1 = y;
             this.posZ1 = z;
             this.posX2 = x + width;
