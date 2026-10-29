@@ -65,7 +65,8 @@ public class TabulaModelRenderUtils {
         public final TabulaModelRenderUtils.TexturedQuad[] quads;
         /** This box as a vanilla cube drawing the same quads */
         public net.minecraft.client.model.geom.ModelPart.Cube toVanilla() {
-            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.posX1, this.posY1, this.posZ1, this.posX2, this.posY2, this.posZ2, this.quads);
+            return dev.vladeezyy.rampart.client.model.VanillaParts.cube(this.texOffX, this.texOffY, this.posX1, this.posY1, this.posZ1, this.posX2 - this.posX1, this.posY2 - this.posY1, this.posZ2 - this.posZ1,
+                this.deltaX, this.deltaY, this.deltaZ, this.mirror, this.texWidth, this.texHeight, this.quads);
         }
 
         public final float posX1;
@@ -74,9 +75,26 @@ public class TabulaModelRenderUtils {
         public final float posX2;
         public final float posY2;
         public final float posZ2;
+        /** The box's parameters, for {@link #toVanilla()} */
+        private final int texOffX;
+        private final int texOffY;
+        private final float deltaX;
+        private final float deltaY;
+        private final float deltaZ;
+        private final boolean mirror;
+        private final float texWidth;
+        private final float texHeight;
 
         public ModelBox(int p_i225950_1_, int p_i225950_2_, float p_i225950_3_, float p_i225950_4_, float p_i225950_5_, float p_i225950_6_, float p_i225950_7_, float p_i225950_8_, float p_i225950_9_, float p_i225950_10_, float p_i225950_11_, boolean p_i225950_12_, float p_i225950_13_, float p_i225950_14_) {
             this.posX1 = p_i225950_3_;
+            this.texOffX = p_i225950_1_;
+            this.texOffY = p_i225950_2_;
+            this.deltaX = p_i225950_9_;
+            this.deltaY = p_i225950_10_;
+            this.deltaZ = p_i225950_11_;
+            this.mirror = p_i225950_12_;
+            this.texWidth = p_i225950_13_;
+            this.texHeight = p_i225950_14_;
             this.posY1 = p_i225950_4_;
             this.posZ1 = p_i225950_5_;
             this.posX2 = p_i225950_3_ + p_i225950_6_;
