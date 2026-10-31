@@ -64,7 +64,7 @@ public abstract class BasicEntityModel<T extends Entity> extends EntityModel<Ent
             // what 1.21.1's LivingEntityRenderer.render set on the model
             if (pose.entity instanceof net.minecraft.world.entity.LivingEntity living) {
                 this.young = living.isBaby();
-                this.attackTime = living.getAttackAnim(pose.partialTick);
+                this.attackTime = living.getSwingAnimation(pose.partialTick);
                 this.riding = living.isPassenger();
             }
             if (pose.entity != null) {
