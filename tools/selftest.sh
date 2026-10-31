@@ -14,7 +14,10 @@ pkill -f "$PROC" 2>/dev/null
 rm -rf $LOADER/run/world build-selftest.log
 mkdir -p $LOADER/run && echo "eula=true" > $LOADER/run/eula.txt
 ./gradlew :$LOADER:runSelftest --console=plain "$@" > build-selftest.log 2>&1 &
+# the hang watchdog of the knowledge base (testing/hang-watchdog.md) while the server starts: HUNG ends the wait
+. tools/watchdog.sh
 i=0
+wait_started build-selftest.log 'Rampart selftest\] (PASS|FAILED)|FAILED TO BIND' || i=999
 until grep -qE 'Rampart selftest\] (PASS|FAILED)|Minecraft Crash Report|crash report has been saved|Failed to start|BUILD FAILED|FAILED TO BIND' build-selftest.log 2>/dev/null || [ $i -gt 300 ]; do sleep 2; i=$((i+1)); done
 sleep 5
 pkill -f "$PROC" 2>/dev/null; sleep 2; pkill -9 -f "$PROC" 2>/dev/null
