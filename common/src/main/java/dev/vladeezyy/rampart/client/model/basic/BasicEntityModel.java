@@ -35,7 +35,7 @@ public abstract class BasicEntityModel<T extends Entity> extends EntityModel<Ent
     private boolean vanillaBuilt;
 
     protected BasicEntityModel() {
-        this(RenderTypes::entityCutout);
+        this(RenderTypes::entityCutoutNoCull);
     }
 
     protected BasicEntityModel(Function<Identifier, RenderType> renderType) {
