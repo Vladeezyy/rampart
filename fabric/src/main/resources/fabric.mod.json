@@ -16,6 +16,7 @@
     "main": ["dev.vladeezyy.rampart.fabric.RampartFabric"],
     "client": ["dev.vladeezyy.rampart.fabric.RampartFabricClient"]
   },
+  "accessWidener": "rampart.accesswidener",
   "mixins": ["rampart.fabric.mixins.json"],
   "depends": {
     "fabricloader": ">=${fabric_loader_version}",
