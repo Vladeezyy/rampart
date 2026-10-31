@@ -27,6 +27,10 @@ import java.util.function.Function;
 public abstract class BasicEntityModel<T extends Entity> extends EntityModel<EntityRenderState> {
     public int textureWidth = 64;
     public int textureHeight = 32;
+    /** 1.21.1's EntityModel fields that Citadel models read, set from the living render state before setupAnim */
+    public boolean young;
+    public float attackTime;
+    public boolean riding;
     private final Map<String, ModelPart> rootChildren;
     private boolean vanillaBuilt;
 
@@ -57,6 +61,12 @@ public abstract class BasicEntityModel<T extends Entity> extends EntityModel<Ent
     public void setupAnim(EntityRenderState state) {
         if (state instanceof RampartState holder) {
             RampartPose pose = holder.rampart$pose();
+            // what 1.21.1's LivingEntityRenderer.render set on the model
+            if (pose.entity instanceof net.minecraft.world.entity.LivingEntity living) {
+                this.young = living.isBaby();
+                this.attackTime = living.getAttackAnim(pose.partialTick);
+                this.riding = living.isPassenger();
+            }
             if (pose.entity != null) {
                 T entity = (T) pose.entity;
                 this.prepareMobModel(entity, pose.limbSwing, pose.limbSwingAmount, pose.partialTick);
