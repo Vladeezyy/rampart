@@ -14,17 +14,10 @@ case $LOADER in
 esac
 rm -rf $LOADER/run/saves/rampart_scene $LOADER/run/screenshots/scene_*.png build-scene.log
 rm -f $LOADER/run/config/rampart-*.toml
-perl -e 'alarm 900; exec @ARGV' ./gradlew :$LOADER:runScene --console=plain "$@" > build-scene.log 2>&1 &
-gradle_pid=$!
-while kill -0 $gradle_pid 2>/dev/null; do
-	if grep -q -- '---- Minecraft Crash Report ----' build-scene.log 2>/dev/null; then
-		sleep 3
-		pkill -f "$PROC" 2>/dev/null
-	fi
-	sleep 2
-done
-wait $gradle_pid
-echo "exit $?"
+# the hang watchdog of the knowledge base (testing/hang-watchdog.md): stops the run on a crash, a hang or 15 min
+. tools/watchdog.sh
+kill_dev() { pkill -f "$PROC" 2>/dev/null; }
+run_watched build-scene.log 900 ./gradlew :$LOADER:runScene --console=plain "$@"
 grep -E '\[scene\] (CHECK|DONE|PERF)' build-scene.log | sed -E 's/^.*\[scene\] //'
 ls $LOADER/run/screenshots/ 2>/dev/null | grep scene_
 echo "--- errors"
