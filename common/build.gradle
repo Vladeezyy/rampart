@@ -5,6 +5,7 @@ plugins {
 
 neoForge {
     neoFormVersion = neo_form_version
+    accessTransformers.from(file('accesstransformer.cfg'))
 }
 
 sourceSets.main.resources.srcDir 'src/generated/resources'
