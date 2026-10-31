@@ -1,6 +1,6 @@
 plugins {
     id 'multiloader-loader'
-    id 'net.fabricmc.fabric-loom'
+    id 'fabric-loom'
 }
 
 repositories {
@@ -21,8 +21,9 @@ sourceSets {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraft_version}"
-    implementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
-    implementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${fabric_loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
 }
 
 loom {
@@ -89,8 +90,8 @@ dependencies {
 }
 def prodDir = file('run-prod')
 tasks.register('prodServer', net.fabricmc.loom.task.prod.ServerProductionRunTask) {
-    dependsOn jar
-    mods.from(jar.archiveFile)
+    dependsOn remapJar
+    mods.from(remapJar.archiveFile)
     mods.from(configurations.productionMods)
     runDir = prodDir
     timeout = java.time.Duration.ofMinutes(5)
